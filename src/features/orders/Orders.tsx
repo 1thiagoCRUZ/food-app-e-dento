@@ -1,96 +1,124 @@
-import { useState } from 'react';
-import { Bell, ChefHat, Package } from 'lucide-react';
-import { OrderCard, Order, OrderStatus } from './components/OrderCard';
+import { useState } from 'react'
+import { Bell, ChefHat, Package, Bike, Filter, RefreshCcw } from 'lucide-react'
+import { OrderCard } from './components/OrderCard'
+import { OrderDrawer } from './components/OrderDrawer'
+import { DriverVerifyModal } from './components/DriverVerifyModal'
+import { orders as initialOrders, drivers as initialDrivers, type Order, type OrderStatus } from '../../data/mock'
 
 export function Orders() {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 'ORD-001', time: '14:32', customer: 'Ana Silva', address: 'Rua das Flores, 123 - Centro\n(11) 98765-4321',
-      items: [{ q: 2, name: 'Pizza Margherita G' }, { q: 1, name: 'Coca-Cola 2L' }],
-      payment: 'Pix', total: 'R$ 92.70', status: 'new'
-    },
-    {
-      id: 'ORD-002', time: '14:28', customer: 'Carlos Souza', address: 'Av. Paulista, 1500 - Bela Vista',
-      items: [{ q: 1, name: 'Smash Burger Duplo' }],
-      payment: 'Cartão Crédito', total: 'R$ 45.50', status: 'new'
-    },
-    {
-      id: 'ORD-003', time: '14:15', customer: 'Maria Santos', address: 'Rua Oscar Freire, 200 - Jardins',
-      items: [{ q: 1, name: 'Combo Sushi 20 peças' }, { q: 1, name: 'Hot Roll 8un' }],
-      payment: 'Cartão Débito', total: 'R$ 109.80', status: 'preparing'
-    },
-    {
-      id: 'ORD-005', time: '13:50', customer: 'Fernanda Costa', address: 'Alameda Santos, 700 - Cerqueira',
-      items: [{ q: 3, name: 'Brownie com Sorvete' }],
-      payment: 'Cartão Crédito', total: 'R$ 68.70', status: 'ready'
-    }
-  ]);
+  const [orders, setOrders] = useState<Order[]>(initialOrders)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [verifyingId, setVerifyingId] = useState<string | null>(null)
 
-  const moveOrder = (id: string, newStatus: OrderStatus) => {
-    setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
-  };
+  const moveOrder = (id: string, newStatus: OrderStatus, patch?: Partial<Order>) => {
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, status: newStatus } : o))
+  }
+
+  const onVerified = (orderId: string, driverId: string) => {
+    const driver = initialDrivers.find(d => d.id === driverId)
+    if (!driver) return
+    moveOrder(orderId, 'shipping', {
+      driver: {
+        name: driver.name,
+        initials: driver.initials,
+        vehicle: driver.vehicle,
+        plate: driver.plate,
+        phone: driver.phone,
+        rating: driver.rating,
+      },
+    })
+    setVerifyingId(null)
+    setSelectedId(null)
+  }
+
+  const selected = orders.find(o => o.id === selectedId) || null
+
+  const columns: { key: OrderStatus; label: string; sub: string; icon: any; nextLabel: string; next: OrderStatus | null }[] = [
+    { key: 'new', label: 'Novos pedidos', sub: 'Aguardando aceite', icon: Bell, nextLabel: 'Aceitar', next: 'preparing' },
+    { key: 'preparing', label: 'Em preparo', sub: 'Cozinha em andamento', icon: ChefHat, nextLabel: 'Marcar pronto', next: 'ready' },
+    { key: 'ready', label: 'Prontos para retirada', sub: 'Aguardando entregador', icon: Package, nextLabel: 'Verificar motoboy', next: null },
+    { key: 'shipping', label: 'Em entrega', sub: 'Saiu com motoboy', icon: Bike, nextLabel: 'Em rota', next: null },
+  ]
 
   return (
-    <div>
+    <>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Gestão de Pedidos</h1>
-          <p className="product-desc">Acompanhe e mova os pedidos pelo fluxo da cozinha em tempo real.</p>
+          <h1 className="page-title">Gestão de pedidos</h1>
+          <p className="page-subtitle">Acompanhe o fluxo da cozinha até a saída para entrega em tempo real.</p>
+        </div>
+        <div className="flex gap-8 items-center">
+          <button className="btn btn-outline">
+            <Filter size={16} /> Filtros
+          </button>
+          <button className="btn btn-outline">
+            <RefreshCcw size={16} /> Atualizar
+          </button>
         </div>
       </div>
-      
+
       <div className="kanban-board">
-        {/* Coluna 1: Novos Pedidos */}
-        <div className="kanban-column">
-          <div className="kanban-column-header">
-            <div className="kanban-column-icon" style={{color: 'var(--primary)', backgroundColor: 'var(--primary-light)'}}>
-              <Bell size={20} />
-            </div>
-            <div style={{flex: 1}}>
-              <div style={{fontWeight: 600, color: 'var(--text-dark)'}}>Novos pedidos</div>
-              <div style={{fontSize: 12, color: 'var(--text-light)'}}>{orders.filter(o => o.status === 'new').length} pedidos</div>
-            </div>
-            <div style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--primary)'}}></div>
-          </div>
-          {orders.filter(o => o.status === 'new').map(o => (
-            <OrderCard key={o.id} order={o} actionLabel="Aceitar" nextStatus="preparing" onMoveOrder={moveOrder} />
-          ))}
-        </div>
+        {columns.map(col => {
+          const colOrders = orders.filter(o => o.status === col.key)
+          return (
+            <div key={col.key} className="kanban-column">
+              <div className="kanban-column-header">
+                <div className="kanban-column-icon"><col.icon size={18} /></div>
+                <div style={{ flex: 1 }}>
+                  <div className="kanban-column-title">{col.label}</div>
+                  <div className="kanban-column-sub">{col.sub}</div>
+                </div>
+                <div className="kanban-column-count">{colOrders.length}</div>
+              </div>
 
-        {/* Coluna 2: Em preparo */}
-        <div className="kanban-column">
-          <div className="kanban-column-header">
-            <div className="kanban-column-icon" style={{color: '#3B82F6', backgroundColor: '#EFF6FF'}}>
-              <ChefHat size={20} />
+              {colOrders.length === 0 ? (
+                <div className="card card-pad text-center text-sm text-muted" style={{ borderStyle: 'dashed' }}>
+                  Nenhum pedido aqui
+                </div>
+              ) : (
+                colOrders.map(o => (
+                  <OrderCard
+                    key={o.id}
+                    order={o}
+                    actionLabel={col.nextLabel}
+                    nextStatus={col.next}
+                    onOpen={() => setSelectedId(o.id)}
+                    onAction={() => {
+                      if (col.key === 'ready') {
+                        setVerifyingId(o.id)
+                      } else if (col.next) {
+                        moveOrder(o.id, col.next)
+                      }
+                    }}
+                  />
+                ))
+              )}
             </div>
-            <div style={{flex: 1}}>
-              <div style={{fontWeight: 600, color: 'var(--text-dark)'}}>Em preparo</div>
-              <div style={{fontSize: 12, color: 'var(--text-light)'}}>{orders.filter(o => o.status === 'preparing').length} pedidos</div>
-            </div>
-            <div style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: '#3B82F6'}}></div>
-          </div>
-          {orders.filter(o => o.status === 'preparing').map(o => (
-            <OrderCard key={o.id} order={o} actionLabel="Despachar" nextStatus="ready" onMoveOrder={moveOrder} />
-          ))}
-        </div>
-
-        {/* Coluna 3: Prontos para retirada */}
-        <div className="kanban-column">
-          <div className="kanban-column-header">
-            <div className="kanban-column-icon" style={{color: 'var(--success)', backgroundColor: 'var(--success-light)'}}>
-              <Package size={20} />
-            </div>
-            <div style={{flex: 1}}>
-              <div style={{fontWeight: 600, color: 'var(--text-dark)'}}>Prontos para retirada</div>
-              <div style={{fontSize: 12, color: 'var(--text-light)'}}>{orders.filter(o => o.status === 'ready').length} pedidos</div>
-            </div>
-            <div style={{width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--success)'}}></div>
-          </div>
-          {orders.filter(o => o.status === 'ready').map(o => (
-            <OrderCard key={o.id} order={o} actionLabel="Aguardando entregador" onMoveOrder={moveOrder} />
-          ))}
-        </div>
+          )
+        })}
       </div>
-    </div>
-  );
+
+      {selected && (
+        <OrderDrawer
+          order={selected}
+          onClose={() => setSelectedId(null)}
+          onAdvance={() => {
+            if (selected.status === 'new') moveOrder(selected.id, 'preparing')
+            else if (selected.status === 'preparing') moveOrder(selected.id, 'ready')
+            else if (selected.status === 'ready') setVerifyingId(selected.id)
+          }}
+          onCancel={() => setSelectedId(null)}
+        />
+      )}
+
+      {verifyingId && (
+        <DriverVerifyModal
+          order={orders.find(o => o.id === verifyingId)!}
+          drivers={initialDrivers}
+          onClose={() => setVerifyingId(null)}
+          onVerified={(driverId) => onVerified(verifyingId, driverId)}
+        />
+      )}
+    </>
+  )
 }

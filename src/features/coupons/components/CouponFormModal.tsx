@@ -1,65 +1,94 @@
-import { X } from 'lucide-react';
+import { useState } from 'react'
+import { X, Percent, DollarSign, Truck } from 'lucide-react'
 
 interface CouponFormModalProps {
-  onClose: () => void;
-  onSave: (data: any) => void;
+  onClose: () => void
+  onSave: (data: any) => void
 }
 
+const types = [
+  { id: 'percent', label: 'Percentual', icon: Percent, hint: 'Ex: 10% OFF' },
+  { id: 'fixed', label: 'Valor fixo', icon: DollarSign, hint: 'Ex: R$ 10 OFF' },
+  { id: 'shipping', label: 'Frete grátis', icon: Truck, hint: 'Isenta a entrega' },
+]
+
 export function CouponFormModal({ onClose, onSave }: CouponFormModalProps) {
+  const [type, setType] = useState('percent')
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      backdropFilter: 'blur(2px)'
-    }}>
-      <div style={{
-        backgroundColor: 'var(--bg-white)',
-        borderRadius: 'var(--radius)',
-        width: '100%',
-        maxWidth: 500,
-        boxShadow: 'var(--shadow)',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 16px' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-dark)', margin: 0 }}>Cadastrar Cupom</h2>
-          <button className="btn-icon" onClick={onClose}>
-            <X size={20} />
-          </button>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">Novo cupom</div>
+          <button className="btn-icon" onClick={onClose}><X size={18} /></button>
         </div>
-        
-        <div style={{ padding: '0 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500, color: 'var(--text-dark)' }}>Código</label>
-            <input type="text" placeholder="Ex: NOVO10" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--primary)', outline: 'none', color: 'var(--text-dark)', fontFamily: 'inherit', textTransform: 'uppercase' }} />
-          </div>
-          
-          <div style={{ display: 'flex', gap: 16 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 500, color: 'var(--text-dark)' }}>Desconto</label>
-              <input type="text" placeholder="Ex: 10% ou R$10" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', outline: 'none', color: 'var(--text-dark)', fontFamily: 'inherit' }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 500, color: 'var(--text-dark)' }}>Pedido Mínimo</label>
-              <input type="text" placeholder="Ex: R$ 50,00" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', outline: 'none', color: 'var(--text-dark)', fontFamily: 'inherit' }} />
+
+        <div className="modal-body">
+          <div className="field">
+            <label>Tipo de cupom</label>
+            <div className="row" style={{ gap: 8 }}>
+              {types.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setType(t.id)}
+                  style={{
+                    flex: 1,
+                    padding: 12,
+                    borderRadius: 10,
+                    border: `1.5px solid ${type === t.id ? 'var(--primary)' : 'var(--border)'}`,
+                    background: type === t.id ? 'var(--primary-light)' : 'var(--bg-white)',
+                    color: type === t.id ? 'var(--primary-dark)' : 'var(--text-main)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <t.icon size={20} />
+                  <span className="text-md fw-600">{t.label}</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.hint}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500, color: 'var(--text-dark)' }}>Validade</label>
-            <input type="date" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', outline: 'none', color: 'var(--text-dark)', fontFamily: 'inherit' }} />
+          <div className="field">
+            <label>Código</label>
+            <input className="input" placeholder="Ex: NOVO10" style={{ textTransform: 'uppercase', letterSpacing: 1 }} />
+            <div className="field-hint">Apenas letras e números, sem espaços</div>
           </div>
-          
-          <button className="btn btn-primary" style={{ width: '100%', marginTop: 8, padding: 12, fontSize: 14 }} onClick={() => onSave({})}>
-            Salvar
-          </button>
+
+          <div className="row">
+            {type !== 'shipping' && (
+              <div className="field">
+                <label>{type === 'percent' ? 'Desconto (%)' : 'Desconto (R$)'}</label>
+                <input className="input" placeholder={type === 'percent' ? 'Ex: 10' : 'Ex: 10,00'} />
+              </div>
+            )}
+            <div className="field">
+              <label>Pedido mínimo (R$)</label>
+              <input className="input" placeholder="Ex: 50,00" />
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="field">
+              <label>Validade</label>
+              <input className="input" type="date" />
+            </div>
+            <div className="field">
+              <label>Limite de usos</label>
+              <input className="input" type="number" placeholder="Ex: 100" />
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={() => onSave({})}>Salvar cupom</button>
         </div>
       </div>
     </div>
-  );
+  )
 }

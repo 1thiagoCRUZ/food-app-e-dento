@@ -1,45 +1,80 @@
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react'
+import type { Product } from '../../../data/mock'
+import { formatBRL } from '../../../lib/format'
 
 interface ProductTableProps {
-  products: any[];
-  onEdit: (product: any) => void;
+  products: Product[]
+  onEdit: (product: Product) => void
+  onToggleAvailable: (id: number) => void
 }
 
-export function ProductTable({ products, onEdit }: ProductTableProps) {
+export function ProductTable({ products, onEdit, onToggleAvailable }: ProductTableProps) {
+  if (products.length === 0) {
+    return (
+      <div className="empty-state">
+        <div className="empty-state-icon"><Pencil size={24} /></div>
+        <div className="empty-state-title">Nenhum produto encontrado</div>
+        <div className="empty-state-text">Ajuste os filtros ou cadastre um novo produto.</div>
+      </div>
+    )
+  }
+
   return (
-    <div className="data-table-container">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Produto</th>
-            <th>Categoria</th>
-            <th>Preço</th>
-            <th style={{textAlign: 'right'}}>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map(product => (
-            <tr key={product.id}>
-              <td>
-                <div className="product-info">
-                  <img src={product.image} alt={product.name} className="product-image" />
-                  <div>
-                    <div className="product-name">{product.name}</div>
-                    <div className="product-desc">{product.desc}</div>
-                  </div>
+    <table className="data-table">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>Estoque</th>
+          <th>Vendas 30d</th>
+          <th>Preço</th>
+          <th>Disponível</th>
+          <th style={{ textAlign: 'right' }}>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {products.map(product => (
+          <tr key={product.id}>
+            <td>
+              <div className="product-info">
+                <img src={product.image} alt={product.name} className="product-image" />
+                <div>
+                  <div className="product-name">{product.name}</div>
+                  <div className="product-desc">{product.desc}</div>
                 </div>
-              </td>
-              <td>{product.category}</td>
-              <td style={{fontWeight: 500, color: 'var(--text-dark)'}}>{product.price}</td>
-              <td style={{textAlign: 'right'}}>
-                <button className="btn-icon" title="Editar" onClick={() => onEdit(product)}>
-                  <Pencil size={16} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+              </div>
+            </td>
+            <td><span className="pill pill-neutral">{product.category}</span></td>
+            <td>
+              {product.stock === 0 ? (
+                <span className="pill pill-danger">Sem estoque</span>
+              ) : product.stock < 10 ? (
+                <span className="pill pill-warning">{product.stock} un</span>
+              ) : (
+                <span style={{ color: 'var(--text-dark)', fontWeight: 500 }}>{product.stock} un</span>
+              )}
+            </td>
+            <td><span className="text-dark fw-600">{product.sold30d}</span></td>
+            <td style={{ fontWeight: 700, color: 'var(--text-dark)' }}>{formatBRL(product.price)}</td>
+            <td>
+              <div
+                className={`switch ${product.available ? 'on' : ''}`}
+                onClick={() => onToggleAvailable(product.id)}
+                role="switch"
+                aria-checked={product.available}
+              />
+            </td>
+            <td style={{ textAlign: 'right' }}>
+              <button className="btn-icon" title="Editar" onClick={() => onEdit(product)}>
+                <Pencil size={16} />
+              </button>
+              <button className="btn-icon" title="Remover">
+                <Trash2 size={16} />
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
 }
