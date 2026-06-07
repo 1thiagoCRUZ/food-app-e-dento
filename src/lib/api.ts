@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000'; // Default backend URL
+const API_BASE_URL = 'https://app-food-backend-vqrm.onrender.com'; // Default backend URL
 
 // We use the real token from localStorage
 const getAuthToken = () => {
