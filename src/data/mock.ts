@@ -284,15 +284,15 @@ export interface Coupon {
   min: number
   uses: number
   limit: number
-  validity: string
-  active: boolean
+  expiresAt: string
+  isActive: boolean
 }
 
 export const coupons: Coupon[] = [
-  { id: 1, code: 'NOVO30', type: 'percent', value: '30%', min: 30, uses: 156, limit: 500, validity: '2026-08-30', active: true },
-  { id: 2, code: 'FRETEGRATIS', type: 'shipping', value: 'Frete grátis', min: 50, uses: 89, limit: 200, validity: '2026-07-15', active: true },
-  { id: 3, code: 'BURGER20', type: 'percent', value: '20%', min: 40, uses: 47, limit: 100, validity: '2026-06-30', active: true },
-  { id: 4, code: 'VOLTA10', type: 'fixed', value: 'R$ 10,00', min: 40, uses: 234, limit: 250, validity: '2026-04-01', active: false },
+  { id: 1, code: 'NOVO30', type: 'percent', value: '30%', min: 30, uses: 156, limit: 500, expiresAt: '2026-08-30', isActive: true },
+  { id: 2, code: 'FRETEGRATIS', type: 'shipping', value: 'Frete grátis', min: 50, uses: 89, limit: 200, expiresAt: '2026-07-15', isActive: true },
+  { id: 3, code: 'BURGER20', type: 'percent', value: '20%', min: 40, uses: 47, limit: 100, expiresAt: '2026-06-30', isActive: true },
+  { id: 4, code: 'VOLTA10', type: 'fixed', value: 'R$ 10,00', min: 40, uses: 234, limit: 250, expiresAt: '2026-04-01', isActive: false },
 ]
 
 export const hourlyOrders = [

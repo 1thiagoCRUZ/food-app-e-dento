@@ -24,7 +24,6 @@ export function ProductTable({ products, onEdit, onToggleAvailable }: ProductTab
       <thead>
         <tr>
           <th>Produto</th>
-          <th>Categoria</th>
           <th>Estoque</th>
           <th>Vendas 30d</th>
           <th>Preço</th>
@@ -40,11 +39,10 @@ export function ProductTable({ products, onEdit, onToggleAvailable }: ProductTab
                 <img src={product.image} alt={product.name} className="product-image" />
                 <div>
                   <div className="product-name">{product.name}</div>
-                  <div className="product-desc">{product.desc}</div>
+                  <div className="product-desc">{product.description || product.desc}</div>
                 </div>
               </div>
             </td>
-            <td><span className="pill pill-neutral">{product.category}</span></td>
             <td>
               {product.stock === 0 ? (
                 <span className="pill pill-danger">Sem estoque</span>

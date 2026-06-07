@@ -1,17 +1,41 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Search, Package, TrendingUp, AlertTriangle } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { ProductTable } from './components/ProductTable'
 import { ProductFormModal } from './components/ProductFormModal'
-import { products as initialProducts, type Product } from '../../data/mock'
+import type { Product } from '../../data/mock'
+import { api } from '../../lib/api'
+import { useAuth } from '../../contexts/AuthContext'
 
 export function Products() {
+  const { user, restaurant } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [products, setProducts] = useState<Product[]>(initialProducts)
+  const [products, setProducts] = useState<Product[]>([])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('Todas')
+  const [isLoading, setIsLoading] = useState(true)
 
-  const categories = useMemo(() => ['Todas', ...Array.from(new Set(products.map(p => p.category)))], [products])
+  useEffect(() => {
+    if (restaurant || user?.role !== 'RESTAURANT') {
+      fetchProducts();
+    }
+  }, [restaurant, user]);
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      const url = restaurant ? `/products?restaurantId=${restaurant.id}` : '/products';
+      const data = await api.get(url);
+      setProducts(data);
+    } catch (error) {
+      console.error('Failed to fetch products', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const categories = useMemo(() => ['Todas', ...Array.from(new Set(products.map(p => p.category).filter(Boolean) as string[]))], [products])
 
   const filtered = useMemo(() => {
     return products.filter(p => {
@@ -26,8 +50,21 @@ export function Products() {
   const lowStock = products.filter(p => p.stock > 0 && p.stock < 10).length
   const outOfStock = products.filter(p => p.stock === 0).length
 
-  const toggleAvailable = (id: number) =>
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, available: !p.available } : p))
+  const toggleAvailable = async (id: number) => {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+    
+    // Optimistic update
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, available: !p.available } : p));
+    
+    try {
+      await api.put(`/products/${id}`, { available: !product.available });
+    } catch (error) {
+      // Revert on error
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, available: product.available } : p));
+      console.error('Failed to update product availability', error);
+    }
+  }
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product)
@@ -37,7 +74,22 @@ export function Products() {
     setIsModalOpen(false)
     setEditingProduct(null)
   }
-  const handleSave = () => handleCloseModal()
+  const handleSave = async (data: any) => {
+    try {
+      if (editingProduct) {
+        await api.put(`/products/${editingProduct.id}`, data);
+        toast.success('Produto atualizado com sucesso!');
+      } else {
+        await api.post('/products', { ...data, restaurantId: restaurant?.id });
+        toast.success('Produto criado com sucesso!');
+      }
+      handleCloseModal()
+      fetchProducts()
+    } catch (error) {
+      console.error('Failed to save product', error);
+      toast.error('Erro ao salvar produto');
+    }
+  }
 
   return (
     <>

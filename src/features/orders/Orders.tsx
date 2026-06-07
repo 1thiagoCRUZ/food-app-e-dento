@@ -1,17 +1,79 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, ChefHat, Package, Bike, Filter, RefreshCcw } from 'lucide-react'
 import { OrderCard } from './components/OrderCard'
 import { OrderDrawer } from './components/OrderDrawer'
 import { DriverVerifyModal } from './components/DriverVerifyModal'
-import { orders as initialOrders, drivers as initialDrivers, type Order, type OrderStatus } from '../../data/mock'
+import { api } from '../../lib/api'
+import { drivers as initialDrivers, type Order, type OrderStatus } from '../../data/mock'
 
 export function Orders() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders)
+  const [orders, setOrders] = useState<Order[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [verifyingId, setVerifyingId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const moveOrder = (id: string, newStatus: OrderStatus, patch?: Partial<Order>) => {
+  const RESTAURANT_ID = 1;
+
+  const fetchOrders = async () => {
+    try {
+      setIsLoading(true)
+      const data = await api.get(`/orders/restaurant/${RESTAURANT_ID}`)
+      // Map backend status to frontend status
+      const mappedOrders: Order[] = data.map((o: any) => ({
+        id: o.id.toString(),
+        time: new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        placedAt: `Hoje, ${new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        customer: { name: `Cliente ${o.userId}`, phone: '(11) 99999-9999', address: 'Endereço não informado' },
+        items: o.items.map((i: any) => ({ name: i.name, q: i.quantity, price: parseFloat(i.price) })),
+        subtotal: parseFloat(o.total),
+        deliveryFee: 0,
+        total: parseFloat(o.total),
+        payment: 'Cartão / Pix',
+        paymentType: 'pix',
+        paid: true,
+        pickupCode: o.pickupVerificationCode || '1234',
+        prepTimeMin: 30,
+        status: mapStatus(o.status),
+      }))
+      setOrders(mappedOrders)
+    } catch (error) {
+      console.error('Failed to fetch orders', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const mapStatus = (status: string): OrderStatus => {
+    if (status === 'AWAITING_PAYMENT' || status === 'NEW') return 'new';
+    if (status === 'PREPARING') return 'preparing';
+    if (status === 'READY_FOR_PICKUP') return 'ready';
+    if (status === 'OUT_FOR_DELIVERY') return 'shipping';
+    if (status === 'DELIVERED') return 'delivered';
+    if (status === 'CANCELLED') return 'cancelled';
+    return 'new';
+  }
+
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const moveOrder = async (id: string, newStatus: OrderStatus, patch?: Partial<Order>) => {
+    // Optimistic update
     setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, status: newStatus } : o))
+    
+    // Reverse map for backend
+    let backendStatus = 'NEW';
+    if (newStatus === 'new') backendStatus = 'NEW';
+    if (newStatus === 'preparing') backendStatus = 'PREPARING';
+    if (newStatus === 'ready') backendStatus = 'READY_FOR_PICKUP';
+    if (newStatus === 'shipping') backendStatus = 'OUT_FOR_DELIVERY';
+
+    try {
+      // Assuming a patch endpoint for order status exists or will exist
+      // await api.patch(`/orders/${id}/status`, { status: backendStatus })
+    } catch (e) {
+      console.error('Failed to update status', e)
+    }
   }
 
   const onVerified = (orderId: string, driverId: string) => {
@@ -48,11 +110,8 @@ export function Orders() {
           <p className="page-subtitle">Acompanhe o fluxo da cozinha até a saída para entrega em tempo real.</p>
         </div>
         <div className="flex gap-8 items-center">
-          <button className="btn btn-outline">
-            <Filter size={16} /> Filtros
-          </button>
-          <button className="btn btn-outline">
-            <RefreshCcw size={16} /> Atualizar
+          <button className="btn btn-outline" onClick={fetchOrders} disabled={isLoading}>
+            <RefreshCcw size={16} className={isLoading ? 'spin' : ''} /> Atualizar
           </button>
         </div>
       </div>

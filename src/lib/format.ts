@@ -1,5 +1,7 @@
-export function formatBRL(value: number): string {
-  return `R$ ${value.toFixed(2).replace('.', ',')}`
+export function formatBRL(value: number | string): string {
+  const num = Number(value);
+  if (isNaN(num)) return 'R$ 0,00';
+  return `R$ ${num.toFixed(2).replace('.', ',')}`
 }
 
 export function formatPhone(phone: string): string {

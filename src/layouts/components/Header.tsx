@@ -1,12 +1,14 @@
 import { PanelLeft, Search, Bell, HelpCircle } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface HeaderProps {
   onToggleSidebar?: () => void
-  storeOpen?: boolean
-  onToggleStore?: () => void
 }
 
-export function Header({ onToggleSidebar, storeOpen = true, onToggleStore }: HeaderProps) {
+export function Header({ onToggleSidebar }: HeaderProps) {
+  const { restaurant, toggleRestaurantStatus } = useAuth();
+  const storeOpen = restaurant?.isOpen ?? false;
+
   return (
     <header className="top-header">
       <div className="header-left">
@@ -20,14 +22,16 @@ export function Header({ onToggleSidebar, storeOpen = true, onToggleStore }: Hea
       </div>
 
       <div className="header-right">
-        <button
-          className={`store-status ${storeOpen ? '' : 'off'}`}
-          onClick={onToggleStore}
-          title={storeOpen ? 'Clique para fechar a loja' : 'Clique para abrir a loja'}
-        >
-          <span className="store-status-light" />
-          <span className="store-status-text">{storeOpen ? 'Loja aberta' : 'Loja fechada'}</span>
-        </button>
+        {restaurant && (
+          <button
+            className={`store-status ${storeOpen ? '' : 'off'}`}
+            onClick={toggleRestaurantStatus}
+            title={storeOpen ? 'Clique para fechar a loja' : 'Clique para abrir a loja'}
+          >
+            <span className="store-status-light" />
+            <span className="store-status-text">{storeOpen ? 'Loja aberta' : 'Loja fechada'}</span>
+          </button>
+        )}
         <button className="notification-btn" title="Notificações">
           <Bell size={18} />
           <span className="notification-dot" />

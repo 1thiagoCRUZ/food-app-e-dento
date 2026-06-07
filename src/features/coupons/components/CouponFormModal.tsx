@@ -15,9 +15,24 @@ const types = [
 export function CouponFormModal({ onClose, onSave }: CouponFormModalProps) {
   const [type, setType] = useState('percent')
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      code: formData.get('code'),
+      type: type,
+      value: (formData.get('discount') as string || '0').replace(',', '.'),
+      min: parseFloat((formData.get('minOrder') as string || '0').replace(',', '.')),
+      limit: parseInt(formData.get('usageLimit') as string || '0', 10),
+      expiresAt: formData.get('validity') ? new Date(formData.get('validity') as string).toISOString() : new Date().toISOString(),
+      isActive: true,
+    };
+    onSave(data);
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
+      <form className="modal" onClick={e => e.stopPropagation()} onSubmit={handleSubmit}>
         <div className="modal-header">
           <div className="modal-title">Novo cupom</div>
           <button className="btn-icon" onClick={onClose}><X size={18} /></button>
@@ -55,7 +70,7 @@ export function CouponFormModal({ onClose, onSave }: CouponFormModalProps) {
 
           <div className="field">
             <label>Código</label>
-            <input className="input" placeholder="Ex: NOVO10" style={{ textTransform: 'uppercase', letterSpacing: 1 }} />
+            <input className="input" name="code" placeholder="Ex: NOVO10" style={{ textTransform: 'uppercase', letterSpacing: 1 }} required />
             <div className="field-hint">Apenas letras e números, sem espaços</div>
           </div>
 
@@ -63,32 +78,32 @@ export function CouponFormModal({ onClose, onSave }: CouponFormModalProps) {
             {type !== 'shipping' && (
               <div className="field">
                 <label>{type === 'percent' ? 'Desconto (%)' : 'Desconto (R$)'}</label>
-                <input className="input" placeholder={type === 'percent' ? 'Ex: 10' : 'Ex: 10,00'} />
+                <input className="input" name="discount" placeholder={type === 'percent' ? 'Ex: 10' : 'Ex: 10,00'} required />
               </div>
             )}
             <div className="field">
               <label>Pedido mínimo (R$)</label>
-              <input className="input" placeholder="Ex: 50,00" />
+              <input className="input" name="minOrder" placeholder="Ex: 50,00" />
             </div>
           </div>
 
           <div className="row">
             <div className="field">
               <label>Validade</label>
-              <input className="input" type="date" />
+              <input className="input" name="validity" type="date" required />
             </div>
             <div className="field">
               <label>Limite de usos</label>
-              <input className="input" type="number" placeholder="Ex: 100" />
+              <input className="input" name="usageLimit" type="number" placeholder="Ex: 100" />
             </div>
           </div>
         </div>
 
         <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-primary" onClick={() => onSave({})}>Salvar cupom</button>
+          <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>
+          <button type="submit" className="btn btn-primary">Salvar cupom</button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }

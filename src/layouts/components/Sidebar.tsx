@@ -1,5 +1,7 @@
-import { LayoutDashboard, ShoppingBag, Bike, Package, Ticket, Settings, ChevronRight, Star } from 'lucide-react'
-import { orders, store } from '../../data/mock'
+import { LayoutDashboard, ShoppingBag, Bike, Package, Ticket, Settings, ChevronRight } from 'lucide-react'
+import { orders } from '../../data/mock'
+
+import { useAuth } from '../../contexts/AuthContext'
 
 interface SidebarProps {
   collapsed?: boolean
@@ -8,6 +10,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed = false, activePath = 'pedidos', onNavigate }: SidebarProps) {
+  const { user, restaurant } = useAuth();
   const pendingOrders = orders.filter(o => o.status === 'new' || o.status === 'preparing').length
 
   const mainMenu = [
@@ -41,11 +44,13 @@ export function Sidebar({ collapsed = false, activePath = 'pedidos', onNavigate 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <img src={store.photo} alt={store.name} className="sidebar-brand-photo" />
+        <div className="sidebar-brand-photo" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span>{restaurant?.name ? restaurant.name.substring(0, 2).toUpperCase() : 'LO'}</span>
+        </div>
         <div className="sidebar-brand-text">
-          <div className="sidebar-brand-name">{store.name}</div>
+          <div className="sidebar-brand-name">{restaurant?.name || 'Seu Restaurante'}</div>
           <div className="sidebar-brand-sub flex items-center gap-4">
-            <Star size={10} fill="currentColor" /> {store.rating} · {store.tagline}
+            Gestão de Loja
           </div>
         </div>
       </div>
@@ -64,10 +69,10 @@ export function Sidebar({ collapsed = false, activePath = 'pedidos', onNavigate 
 
       <div className="sidebar-footer">
         <div className="user-pill">
-          <div className="user-avatar">JS</div>
+          <div className="user-avatar">{user?.name ? user.name.substring(0, 2).toUpperCase() : 'JS'}</div>
           <div className="user-info">
-            <div className="user-name">João Silva</div>
-            <div className="user-role">Pizzaria Roma</div>
+            <div className="user-name">{user?.name || 'Usuário'}</div>
+            <div className="user-role">{restaurant?.name || 'Administrador'}</div>
           </div>
           <ChevronRight size={16} className="user-chev" color="var(--text-light)" />
         </div>

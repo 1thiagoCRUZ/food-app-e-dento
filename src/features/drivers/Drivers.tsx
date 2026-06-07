@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bike, Phone, MessageCircle, Star, MapPin, Search, Navigation, Store, Flag } from 'lucide-react'
-import { drivers, orders, type DeliveryStage, type Driver } from '../../data/mock'
+import { orders, type DeliveryStage, type Driver } from '../../data/mock'
+import { api } from '../../lib/api'
 import { formatPhone } from '../../lib/format'
 import { MapModal } from '../../components/MapModal'
 
@@ -19,7 +20,41 @@ const stageMap: Record<DeliveryStage, { label: string; pill: string; short: stri
 }
 
 export function Drivers() {
+  const [drivers, setDrivers] = useState<Driver[]>([])
   const [mapDriver, setMapDriver] = useState<Driver | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchDrivers = async () => {
+    try {
+      setIsLoading(true)
+      const data = await api.get('/couriers')
+      const mappedDrivers: Driver[] = data.map((c: any) => ({
+        id: c.id.toString(),
+        name: `Entregador ${c.userId}`,
+        initials: `E${c.userId}`,
+        phone: '11999999999',
+        vehicle: 'Moto Honda CG',
+        plate: 'ABC-1234',
+        rating: 4.8,
+        totalDeliveries: 120,
+        distanceKm: c.isOnline ? 1.2 : null,
+        status: c.isOnline ? 'available' : 'offline',
+        currentOrderId: null,
+        deliveryStage: null,
+        etaMin: null,
+      }))
+      setDrivers(mappedDrivers)
+    } catch (error) {
+      console.error('Failed to fetch drivers', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDrivers()
+  }, [])
+
   const delivering = drivers.filter(d => d.status === 'busy')
   const available = drivers.filter(d => d.status === 'available')
   const offline = drivers.filter(d => d.status === 'offline')

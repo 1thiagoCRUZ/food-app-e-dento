@@ -32,7 +32,7 @@ export function CouponTable({ coupons, onToggleStatus }: CouponTableProps) {
           {coupons.map(c => {
             const Icon = typeIcon[c.type] || Percent
             const usedPct = (c.uses / c.limit) * 100
-            const expired = new Date(c.validity).getTime() < Date.now()
+            const expired = new Date(c.expiresAt).getTime() < Date.now()
             return (
               <tr key={c.id}>
                 <td>
@@ -67,18 +67,18 @@ export function CouponTable({ coupons, onToggleStatus }: CouponTableProps) {
                   {expired ? (
                     <span className="pill pill-danger">Expirado</span>
                   ) : (
-                    <span style={{ color: 'var(--text-dark)' }}>{c.validity}</span>
+                    <span style={{ color: 'var(--text-dark)' }}>{new Date(c.expiresAt).toLocaleDateString()}</span>
                   )}
                 </td>
                 <td>
                   <div className="flex items-center gap-8">
                     <div
-                      className={`switch ${c.active ? 'on' : ''}`}
+                      className={`switch ${c.isActive ? 'on' : ''}`}
                       onClick={() => onToggleStatus(c.id)}
                     />
-                    <span className={`pill ${c.active ? 'pill-success' : 'pill-neutral'}`}>
+                    <span className={`pill ${c.isActive ? 'pill-success' : 'pill-neutral'}`}>
                       <span className="pill-dot" />
-                      {c.active ? 'Ativo' : 'Inativo'}
+                      {c.isActive ? 'Ativo' : 'Inativo'}
                     </span>
                   </div>
                 </td>

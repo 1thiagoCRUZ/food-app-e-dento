@@ -1,14 +1,18 @@
 import { X, Navigation, Phone, MessageCircle, Bike, Store, Flag } from 'lucide-react'
 import type { Driver, Order } from '../data/mock'
-import { store } from '../data/mock'
+import { useAuth } from '../contexts/AuthContext'
 
 interface MapModalProps {
+  isOpen: boolean
   driver?: Driver | null
   order?: Order | null
   onClose: () => void
 }
 
-export function MapModal({ driver, order, onClose }: MapModalProps) {
+export function MapModal({ isOpen, driver, order, onClose }: MapModalProps) {
+  const { restaurant } = useAuth()
+  if (!isOpen || !order) return null
+
   const stage = driver?.deliveryStage ?? 'going_to_pickup'
   const stageLabel: Record<string, string> = {
     going_to_pickup: 'Indo ao restaurante',
@@ -63,9 +67,9 @@ export function MapModal({ driver, order, onClose }: MapModalProps) {
           </svg>
 
           {/* Restaurant pin */}
-          <div className="map-pin" style={{ top: '25%', left: '25%' }}>
+          <div className="map-pin restaurant-pin" style={{ top: '60%', left: '40%' }}>
             <div className="map-pin-dot"><Store size={14} color="white" /></div>
-            <div className="map-pin-label">{store.name}</div>
+            <div className="map-pin-label">{restaurant?.name || 'Seu Restaurante'}</div>
           </div>
 
           {/* Customer pin */}

@@ -1,25 +1,68 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Ticket, TrendingUp, Calendar } from 'lucide-react'
 import { CouponTable } from './components/CouponTable'
 import { CouponFormModal } from './components/CouponFormModal'
-import { coupons as initialCoupons, type Coupon } from '../../data/mock'
+import type { Coupon } from '../../data/mock'
+import { api } from '../../lib/api'
+import { useAuth } from '../../contexts/AuthContext'
 
 export function Coupons() {
+  const { user, restaurant } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons)
+  const [coupons, setCoupons] = useState<Coupon[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const toggleStatus = (id: number) =>
-    setCoupons(prev => prev.map(c => c.id === id ? { ...c, active: !c.active } : c))
+  useEffect(() => {
+    if (restaurant || user?.role !== 'RESTAURANT') {
+      fetchCoupons();
+    }
+  }, [restaurant, user]);
 
-  const activeCount = coupons.filter(c => c.active).length
-  const totalUses = coupons.reduce((acc, c) => acc + c.uses, 0)
+  const fetchCoupons = async () => {
+    try {
+      setIsLoading(true);
+      const url = restaurant ? `/coupons?restaurantId=${restaurant.id}` : '/coupons';
+      const data = await api.get(url);
+      setCoupons(data);
+    } catch (error) {
+      console.error('Failed to fetch coupons', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleStatus = async (id: number) => {
+    const coupon = coupons.find(c => c.id === id);
+    if (!coupon) return;
+
+    // Optimistic update
+    setCoupons(prev => prev.map(c => c.id === id ? { ...c, isActive: !c.isActive } : c));
+    
+    // NOTE: Ideally the backend has a /coupons/:id/toggle endpoint or we PUT the whole object.
+    // Assuming we have an update endpoint or we'll just log it for now.
+    // try { await api.patch(`/coupons/${id}/status`, { active: !coupon.active }); }
+    // catch (e) { setCoupons(...) }
+  }
+
+  const activeCount = coupons.filter(c => c.isActive).length
+  const totalUses = coupons.reduce((acc, c) => acc + (c.uses || 0), 0)
   const expiringCount = coupons.filter(c => {
-    const d = new Date(c.validity)
+    if (!c.expiresAt) return false;
+    const d = new Date(c.expiresAt)
     const diff = (d.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    return diff <= 30 && diff > 0 && c.active
+    return diff <= 30 && diff > 0 && c.isActive
   }).length
 
-  const handleSave = () => setIsModalOpen(false)
+  const handleSave = async (data: any) => {
+    try {
+      await api.post('/coupons', { ...data, restaurantId: restaurant?.id });
+      setIsModalOpen(false);
+      fetchCoupons();
+    } catch (error) {
+      console.error('Failed to save coupon', error);
+      alert('Erro ao salvar cupom');
+    }
+  }
 
   return (
     <>

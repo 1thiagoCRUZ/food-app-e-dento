@@ -10,17 +10,12 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children, activePath = 'pedidos', onNavigate }: MainLayoutProps) {
   const [collapsed, setCollapsed] = useState(false)
-  const [storeOpen, setStoreOpen] = useState(true)
 
   return (
     <div className="app-container">
       <Sidebar collapsed={collapsed} activePath={activePath} onNavigate={onNavigate} />
       <div className="main-content">
-        <Header
-          onToggleSidebar={() => setCollapsed(!collapsed)}
-          storeOpen={storeOpen}
-          onToggleStore={() => setStoreOpen(!storeOpen)}
-        />
+        <Header onToggleSidebar={() => setCollapsed(!collapsed)} />
         <main className="page-content">
           <div className="page-inner">{children}</div>
         </main>

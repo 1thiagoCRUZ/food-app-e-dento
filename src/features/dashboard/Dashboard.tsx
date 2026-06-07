@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { ShoppingBag, DollarSign, TrendingUp, Clock, ArrowUp, ArrowDown, ChevronRight, Bike } from 'lucide-react'
-import { orders, drivers, hourlyOrders, topProducts } from '../../data/mock'
+import { api } from '../../lib/api'
+import { type Order, type Driver } from '../../data/mock'
 import { formatBRL } from '../../lib/format'
 
 interface DashboardProps {
@@ -7,10 +9,70 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const todayOrders = 47
-  const todayRevenue = 3842
-  const avgTicket = 81.74
-  const avgPrepTime = 28
+  const [orders, setOrders] = useState<Order[]>([])
+  const [drivers, setDrivers] = useState<Driver[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const RESTAURANT_ID = 1;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        const [ordersData, couriersData] = await Promise.all([
+          api.get(`/orders/restaurant/${RESTAURANT_ID}`),
+          api.get(`/couriers`)
+        ])
+        
+        const mappedOrders: Order[] = ordersData.map((o: any) => ({
+          id: o.id.toString(),
+          customer: { name: `Cliente ${o.userId}`, phone: '(11) 99999-9999' },
+          items: o.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: parseFloat(i.price) })),
+          total: parseFloat(o.total),
+          status: mapStatus(o.status),
+          time: new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }))
+        setOrders(mappedOrders)
+
+        const mappedDrivers: Driver[] = couriersData.map((c: any) => ({
+          id: c.id.toString(),
+          name: `Entregador ${c.userId}`,
+          initials: `E${c.userId}`,
+          phone: '',
+          vehicle: '',
+          plate: '',
+          rating: 5,
+          totalDeliveries: 0,
+          distanceKm: null,
+          status: c.isOnline ? 'available' : 'offline',
+          currentOrderId: null,
+          deliveryStage: null,
+          etaMin: null,
+        }))
+        setDrivers(mappedDrivers)
+      } catch (error) {
+        console.error('Failed to fetch dashboard data', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  const mapStatus = (status: string) => {
+    if (status === 'AWAITING_PAYMENT' || status === 'NEW') return 'new';
+    if (status === 'PREPARING') return 'preparing';
+    if (status === 'READY_FOR_PICKUP') return 'ready';
+    if (status === 'OUT_FOR_DELIVERY') return 'shipping';
+    if (status === 'DELIVERED') return 'delivered';
+    if (status === 'CANCELLED') return 'cancelled';
+    return 'new';
+  }
+
+  const todayOrders = orders.length
+  const todayRevenue = orders.reduce((acc, o) => acc + o.total, 0)
+  const avgTicket = todayOrders > 0 ? todayRevenue / todayOrders : 0
+  const avgPrepTime = 28 // Mocked for now
 
   const newCount = orders.filter(o => o.status === 'new').length
   const preparingCount = orders.filter(o => o.status === 'preparing').length
@@ -20,8 +82,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const availableDrivers = drivers.filter(d => d.status === 'available').length
   const busyDrivers = drivers.filter(d => d.status === 'busy').length
 
-  const maxHourly = Math.max(...hourlyOrders.map(h => h.count))
-  const maxTopProduct = Math.max(...topProducts.map(p => p.count))
+  // Simplified mock for charts to avoid complex aggregation logic in UI component for now
+  const hourlyOrders = [{hour: '10h', count: 0}, {hour: '11h', count: todayOrders}, {hour: '12h', count: 0}]
+  const topProducts = [{name: 'Produto Destaque', count: 0, revenue: 0}]
+  
+  const maxHourly = Math.max(...hourlyOrders.map(h => h.count), 1)
+  const maxTopProduct = Math.max(...topProducts.map(p => p.count), 1)
 
   return (
     <>

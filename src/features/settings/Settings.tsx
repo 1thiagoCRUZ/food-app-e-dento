@@ -1,15 +1,20 @@
 import { useState } from 'react'
 import { Store, Clock, CreditCard, Bell, Truck } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 
 const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 
 export function Settings() {
+  const { restaurant, toggleRestaurantStatus } = useAuth();
   const [autoAccept, setAutoAccept] = useState(false)
   const [printOnNew, setPrintOnNew] = useState(true)
   const [soundAlert, setSoundAlert] = useState(true)
+  
   const [hours, setHours] = useState(
     days.map(d => ({ day: d, open: '11:00', close: '23:00', enabled: d !== 'Domingo' }))
   )
+
+  const isStoreOpen = restaurant?.isOpen ?? false;
 
   return (
     <>
@@ -18,17 +23,30 @@ export function Settings() {
           <h1 className="page-title">Configurações</h1>
           <p className="page-subtitle">Informações da loja, horários e preferências operacionais.</p>
         </div>
+        <div className="flex gap-12 items-center">
+          <span className="text-md fw-600 text-dark">Status da loja:</span>
+          <div className="flex items-center gap-8">
+            <div
+              className={`switch ${isStoreOpen ? 'on' : ''}`}
+              onClick={toggleRestaurantStatus}
+            />
+            <span className={`pill ${isStoreOpen ? 'pill-success' : 'pill-neutral'}`}>
+              <span className="pill-dot" />
+              {isStoreOpen ? 'Aberta agora' : 'Fechada'}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <SectionCard icon={Store} title="Dados da loja" desc="Informações exibidas para clientes">
           <div className="field">
             <label>Nome da loja</label>
-            <input className="input" defaultValue="Pizzaria Roma" />
+            <input className="input" defaultValue={restaurant?.name || "E-Dento Food"} />
           </div>
           <div className="field">
             <label>CNPJ</label>
-            <input className="input" defaultValue="12.345.678/0001-90" />
+            <input className="input" defaultValue={restaurant?.cnpj || "12.345.678/0001-90"} />
           </div>
           <div className="field">
             <label>Endereço</label>
