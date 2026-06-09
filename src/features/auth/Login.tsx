@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
+import heroImg from '../../assets/hero.jpg';
 
 export function Login({ onSwitchToRegister }: { onSwitchToRegister?: () => void }) {
   const [email, setEmail] = useState('admin@restaurante.com');
@@ -33,6 +34,7 @@ export function Login({ onSwitchToRegister }: { onSwitchToRegister?: () => void 
     <div style={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-main)', alignItems: 'center', justifyContent: 'center' }}>
       <div className="card card-pad-lg" style={{ width: '100%', maxWidth: '400px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <img src={heroImg} alt="Hero Logo" style={{ width: '120px', borderRadius: '16px', marginBottom: '16px', objectFit: 'cover' }} />
           <h1 className="page-title" style={{ fontSize: '24px' }}>E-Dento Food</h1>
           <p className="page-subtitle">Portal do Restaurante</p>
         </div>

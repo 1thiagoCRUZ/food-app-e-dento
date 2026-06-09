@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingBag, Bike, Package, Ticket, Settings, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Bike, Package, Ticket, Settings, ChevronRight, LogOut } from 'lucide-react'
 import { orders } from '../../data/mock'
 
 import { useAuth } from '../../contexts/AuthContext'
@@ -10,7 +10,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed = false, activePath = 'pedidos', onNavigate }: SidebarProps) {
-  const { user, restaurant } = useAuth();
+  const { user, restaurant, logout } = useAuth();
 
   const mainMenu = [
     { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
@@ -73,7 +73,14 @@ export function Sidebar({ collapsed = false, activePath = 'pedidos', onNavigate 
             <div className="user-name">{user?.name || 'Usuário'}</div>
             <div className="user-role">{restaurant?.name || 'Administrador'}</div>
           </div>
-          <ChevronRight size={16} className="user-chev" color="var(--text-light)" />
+          <button 
+            className="btn-icon" 
+            title="Sair" 
+            onClick={logout} 
+            style={{ padding: '4px', marginLeft: 'auto' }}
+          >
+            <LogOut size={16} className="text-muted hover:text-danger" />
+          </button>
         </div>
       </div>
     </aside>

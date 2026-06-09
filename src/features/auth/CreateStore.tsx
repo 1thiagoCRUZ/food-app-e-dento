@@ -83,8 +83,18 @@ export function CreateStore({ onStoreCreated }: { onStoreCreated: () => void }) 
             <input 
               type="text" 
               value={cnpj}
-              onChange={(e) => setCnpj(e.target.value)}
+              onChange={(e) => {
+                let v = e.target.value.replace(/\D/g, '')
+                if (v.length <= 14) {
+                  v = v.replace(/^(\d{2})(\d)/, '$1.$2')
+                  v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                  v = v.replace(/\.(\d{3})(\d)/, '.$1/$2')
+                  v = v.replace(/(\d{4})(\d)/, '$1-$2')
+                  setCnpj(v)
+                }
+              }}
               required
+              maxLength={18}
               style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', outline: 'none' }}
               placeholder="00.000.000/0000-00"
             />

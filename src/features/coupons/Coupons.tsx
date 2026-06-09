@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Ticket, TrendingUp, Calendar } from 'lucide-react'
+import { Plus, Ticket, TrendingUp, Calendar, Loader2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { CouponTable } from './components/CouponTable'
 import { CouponFormModal } from './components/CouponFormModal'
 import type { Coupon } from '../../data/mock'
@@ -60,7 +61,7 @@ export function Coupons() {
       fetchCoupons();
     } catch (error) {
       console.error('Failed to save coupon', error);
-      alert('Erro ao salvar cupom');
+      toast.error('Erro ao salvar cupom');
     }
   }
 
@@ -71,7 +72,7 @@ export function Coupons() {
       fetchCoupons();
     } catch (error) {
       console.error('Failed to delete coupon', error);
-      alert('Erro ao excluir cupom');
+      toast.error('Erro ao excluir cupom');
     }
   }
 
@@ -116,7 +117,13 @@ export function Coupons() {
         </div>
       </div>
 
-      <CouponTable coupons={coupons} onToggleStatus={toggleStatus} onDelete={handleDelete} />
+      {isLoading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+          <Loader2 className="spin text-primary" size={48} />
+        </div>
+      ) : (
+        <CouponTable coupons={coupons} onToggleStatus={toggleStatus} onDelete={handleDelete} />
+      )}
 
       {isModalOpen && (
         <CouponFormModal onClose={() => setIsModalOpen(false)} onSave={handleSave} />

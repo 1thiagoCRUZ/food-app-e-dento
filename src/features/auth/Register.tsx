@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
+import heroImg from '../../assets/hero.jpg';
 
 export function Register({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,6 +22,7 @@ export function Register({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
       await api.post('/users/register', { 
         name, 
         email, 
+        cpf,
         password, 
         role: 'RESTAURANT' 
       });
@@ -43,6 +46,7 @@ export function Register({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
     <div style={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-main)', alignItems: 'center', justifyContent: 'center' }}>
       <div className="card card-pad-lg" style={{ width: '100%', maxWidth: '400px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <img src={heroImg} alt="Hero Logo" style={{ width: '120px', borderRadius: '16px', marginBottom: '16px', objectFit: 'cover' }} />
           <h1 className="page-title" style={{ fontSize: '24px' }}>E-Dento Food</h1>
           <p className="page-subtitle">Criar Conta de Lojista</p>
         </div>
@@ -77,6 +81,26 @@ export function Register({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
             />
           </div>
           <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-dark)' }}>CPF</label>
+            <input 
+              type="text" 
+              value={cpf}
+              onChange={(e) => {
+                let v = e.target.value.replace(/\D/g, '')
+                if (v.length <= 11) {
+                  v = v.replace(/(\d{3})(\d)/, '$1.$2')
+                  v = v.replace(/(\d{3})(\d)/, '$1.$2')
+                  v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+                  setCpf(v)
+                }
+              }}
+              required
+              maxLength={14}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', outline: 'none' }}
+              placeholder="123.456.789-09"
+            />
+          </div>
+          <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-dark)' }}>Senha</label>
             <input 
               type="password" 
@@ -94,7 +118,7 @@ export function Register({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
             style={{ width: '100%', marginTop: '8px', padding: '12px', display: 'flex', justifyContent: 'center' }}
             disabled={loading}
           >
-            {loading ? 'Criando conta...' : 'Cadastrar'}
+            {loading ? 'Criando conta...' : 'Avançar'}
           </button>
         </form>
 

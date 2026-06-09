@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Search, Package, TrendingUp, AlertTriangle } from 'lucide-react'
+import { Plus, Search, Package, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ProductTable } from './components/ProductTable'
 import { ProductFormModal } from './components/ProductFormModal'
@@ -123,31 +123,37 @@ export function Products() {
         <SummaryCard label="Sem estoque" value={outOfStock} icon={AlertTriangle} warning={outOfStock > 0} />
       </div>
 
-      <div className="data-table-container">
-        <div className="table-toolbar">
-          <div className="search-box" style={{ minWidth: 0, flex: 1, maxWidth: 360 }}>
-            <Search size={14} color="var(--text-light)" />
-            <input
-              placeholder="Buscar produto…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-8">
-            {categories.map(c => (
-              <button
-                key={c}
-                onClick={() => setCategory(c)}
-                className={`pill ${category === c ? 'pill-primary' : 'pill-neutral'}`}
-                style={{ cursor: 'pointer', border: 'none' }}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+      {isLoading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+          <Loader2 className="spin text-primary" size={48} />
         </div>
-        <ProductTable products={filtered} onEdit={handleEdit} onDelete={handleDelete} onToggleAvailable={toggleAvailable} />
-      </div>
+      ) : (
+        <div className="data-table-container">
+          <div className="table-toolbar">
+            <div className="search-box" style={{ minWidth: 0, flex: 1, maxWidth: 360 }}>
+              <Search size={14} color="var(--text-light)" />
+              <input
+                placeholder="Buscar produto…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-8">
+              {categories.map(c => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={`pill ${category === c ? 'pill-primary' : 'pill-neutral'}`}
+                  style={{ cursor: 'pointer', border: 'none' }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+          <ProductTable products={filtered} onEdit={handleEdit} onDelete={handleDelete} onToggleAvailable={toggleAvailable} />
+        </div>
+      )}
 
       {isModalOpen && (
         <ProductFormModal
