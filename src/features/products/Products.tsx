@@ -25,7 +25,7 @@ export function Products() {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      const url = restaurant ? `/products?restaurantId=${restaurant.id}` : '/products';
+      const url = restaurant ? `/catalog?restaurantId=${restaurant.id}` : '/catalog';
       const data = await api.get(url);
       setProducts(data);
     } catch (error) {
@@ -58,7 +58,7 @@ export function Products() {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, available: !p.available } : p));
     
     try {
-      await api.put(`/products/${id}`, { available: !product.available });
+      await api.put(`/catalog/${id}`, { available: !product.available });
     } catch (error) {
       // Revert on error
       setProducts(prev => prev.map(p => p.id === id ? { ...p, available: product.available } : p));
@@ -70,17 +70,30 @@ export function Products() {
     setEditingProduct(product)
     setIsModalOpen(true)
   }
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Tem certeza que deseja remover este produto?')) return;
+    try {
+      await api.delete(`/catalog/${id}`);
+      fetchProducts();
+    } catch (error) {
+      console.error('Failed to delete product', error);
+    }
+  }
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setEditingProduct(null)
   }
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: FormData) => {
     try {
+      if (restaurant) {
+        data.append('restaurantId', restaurant.id.toString());
+      }
       if (editingProduct) {
-        await api.put(`/products/${editingProduct.id}`, data);
+        await api.put(`/catalog/${editingProduct.id}`, data);
         toast.success('Produto atualizado com sucesso!');
       } else {
-        await api.post('/products', { ...data, restaurantId: restaurant?.id });
+        await api.post('/catalog', data);
         toast.success('Produto criado com sucesso!');
       }
       handleCloseModal()
@@ -133,7 +146,7 @@ export function Products() {
             ))}
           </div>
         </div>
-        <ProductTable products={filtered} onEdit={handleEdit} onToggleAvailable={toggleAvailable} />
+        <ProductTable products={filtered} onEdit={handleEdit} onDelete={handleDelete} onToggleAvailable={toggleAvailable} />
       </div>
 
       {isModalOpen && (

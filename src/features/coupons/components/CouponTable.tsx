@@ -5,6 +5,7 @@ import { formatBRL } from '../../../lib/format'
 interface CouponTableProps {
   coupons: Coupon[]
   onToggleStatus: (id: number) => void
+  onDelete: (id: number) => void
 }
 
 const typeIcon: Record<string, any> = {
@@ -13,7 +14,7 @@ const typeIcon: Record<string, any> = {
   shipping: Truck,
 }
 
-export function CouponTable({ coupons, onToggleStatus }: CouponTableProps) {
+export function CouponTable({ coupons, onToggleStatus, onDelete }: CouponTableProps) {
   return (
     <div className="data-table-container">
       <table className="data-table">
@@ -84,7 +85,7 @@ export function CouponTable({ coupons, onToggleStatus }: CouponTableProps) {
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   <button className="btn-icon" title="Editar"><Pencil size={16} /></button>
-                  <button className="btn-icon" title="Remover"><Trash2 size={16} /></button>
+                  <button className="btn-icon" title="Remover" onClick={() => onDelete(c.id)}><Trash2 size={16} /></button>
                 </td>
               </tr>
             )

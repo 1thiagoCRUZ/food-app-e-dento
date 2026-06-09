@@ -34,39 +34,48 @@ export const api = {
 
     async post(endpoint: string, data: any) {
         const token = getAuthToken();
+        const isFormData = data instanceof FormData;
+        const headers: any = {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        };
+        if (!isFormData) headers['Content-Type'] = 'application/json';
+
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
-            headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            headers,
+            body: isFormData ? data : JSON.stringify(data)
         });
         return handleResponse(response);
     },
 
     async put(endpoint: string, data: any) {
         const token = getAuthToken();
+        const isFormData = data instanceof FormData;
+        const headers: any = {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        };
+        if (!isFormData) headers['Content-Type'] = 'application/json';
+
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'PUT',
-            headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            headers,
+            body: isFormData ? data : JSON.stringify(data)
         });
         return handleResponse(response);
     },
 
     async patch(endpoint: string, data: any) {
         const token = getAuthToken();
+        const isFormData = data instanceof FormData;
+        const headers: any = {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        };
+        if (!isFormData) headers['Content-Type'] = 'application/json';
+
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'PATCH',
-            headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            headers,
+            body: isFormData ? data : JSON.stringify(data)
         });
         return handleResponse(response);
     },

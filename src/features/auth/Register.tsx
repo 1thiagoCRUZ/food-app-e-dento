@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
 
-export function Login({ onSwitchToRegister }: { onSwitchToRegister?: () => void }) {
-  const [email, setEmail] = useState('admin@restaurante.com');
-  const [password, setPassword] = useState('password123');
+export function Register({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -15,15 +16,24 @@ export function Login({ onSwitchToRegister }: { onSwitchToRegister?: () => void 
     setLoading(true);
 
     try {
+      // Create user
+      await api.post('/users/register', { 
+        name, 
+        email, 
+        password, 
+        role: 'RESTAURANT' 
+      });
+
+      // Auto login after registration
       const response = await api.post('/users/login', { email, password });
       if (response && response.token && response.user) {
         await login(response.token, response.user);
       } else {
-        setError('Token ou dados do usuário não recebidos. Verifique o console.');
+        setError('Conta criada, mas falha ao fazer login automático.');
       }
     } catch (err: any) {
       console.error(err);
-      setError('E-mail ou senha incorretos. Tente novamente.');
+      setError('Erro ao criar conta. Verifique se o e-mail já está em uso.');
     } finally {
       setLoading(false);
     }
@@ -34,7 +44,7 @@ export function Login({ onSwitchToRegister }: { onSwitchToRegister?: () => void 
       <div className="card card-pad-lg" style={{ width: '100%', maxWidth: '400px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <h1 className="page-title" style={{ fontSize: '24px' }}>E-Dento Food</h1>
-          <p className="page-subtitle">Portal do Restaurante</p>
+          <p className="page-subtitle">Criar Conta de Lojista</p>
         </div>
 
         {error && (
@@ -44,6 +54,17 @@ export function Login({ onSwitchToRegister }: { onSwitchToRegister?: () => void 
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-dark)' }}>Nome Completo</label>
+            <input 
+              type="text" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-light)', outline: 'none' }}
+              placeholder="João Silva"
+            />
+          </div>
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-dark)' }}>E-mail</label>
             <input 
@@ -73,15 +94,13 @@ export function Login({ onSwitchToRegister }: { onSwitchToRegister?: () => void 
             style={{ width: '100%', marginTop: '8px', padding: '12px', display: 'flex', justifyContent: 'center' }}
             disabled={loading}
           >
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? 'Criando conta...' : 'Cadastrar'}
           </button>
         </form>
 
-        {onSwitchToRegister && (
-          <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: 'var(--text-light)' }}>
-            Ainda não tem conta? <button onClick={onSwitchToRegister} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>Cadastre-se</button>
-          </div>
-        )}
+        <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: 'var(--text-light)' }}>
+          Já tem conta? <button onClick={onSwitchToLogin} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>Faça login</button>
+        </div>
       </div>
     </div>
   );

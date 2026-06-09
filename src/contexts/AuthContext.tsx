@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (token: string, user: User) => Promise<void>;
   logout: () => void;
   toggleRestaurantStatus: () => Promise<void>;
+  fetchMyRestaurant: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -59,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRestaurant(data);
     } catch (e) {
       console.error('Failed to fetch restaurant data', e);
+      setRestaurant(null);
     }
   };
 
@@ -95,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, restaurant, isLoading, login, logout, toggleRestaurantStatus }}>
+    <AuthContext.Provider value={{ user, restaurant, isLoading, login, logout, toggleRestaurantStatus, fetchMyRestaurant }}>
       {children}
     </AuthContext.Provider>
   );

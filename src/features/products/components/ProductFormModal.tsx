@@ -4,16 +4,18 @@ import type { Product } from '../../../data/mock'
 
 interface ProductFormModalProps {
   onClose: () => void
-  onSave: (data: any) => void
+  onSave: (data: FormData) => void
   product?: Product | null
 }
 
 export function ProductFormModal({ onClose, onSave, product }: ProductFormModalProps) {
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(product?.image || null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageBase64(reader.result as string);
@@ -25,15 +27,17 @@ export function ProductFormModal({ onClose, onSave, product }: ProductFormModalP
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const data = {
-      name: formData.get('name'),
-      description: formData.get('description'),
-      description: formData.get('description'),
-      price: parseFloat((formData.get('price') as string).replace(',', '.')),
-      stock: parseInt(formData.get('stock') as string, 10),
-      image: imageBase64,
-    };
-    onSave(data);
+    const priceStr = formData.get('price') as string;
+    if (priceStr) {
+      formData.set('price', parseFloat(priceStr.replace(',', '.')).toString());
+    }
+    formData.set('available', 'true');
+    if (imageFile) {
+      formData.set('image', imageFile);
+    } else {
+      formData.delete('image');
+    }
+    onSave(formData);
   };
 
   return (
@@ -41,7 +45,7 @@ export function ProductFormModal({ onClose, onSave, product }: ProductFormModalP
       <form className="modal" onClick={e => e.stopPropagation()} onSubmit={handleSubmit}>
         <div className="modal-header">
           <div className="modal-title">{product ? 'Editar produto' : 'Novo produto'}</div>
-          <button className="btn-icon" onClick={onClose}><X size={18} /></button>
+          <button type="button" className="btn-icon" onClick={onClose}><X size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -52,7 +56,7 @@ export function ProductFormModal({ onClose, onSave, product }: ProductFormModalP
 
           <div className="field">
             <label>Descrição</label>
-            <textarea className="textarea" name="description" defaultValue={product?.desc} placeholder="Ingredientes, modo de preparo, observações…" />
+            <textarea className="textarea" name="description" defaultValue={product?.description || product?.desc} placeholder="Ingredientes, modo de preparo, observações…" />
           </div>
 
           <div className="row">

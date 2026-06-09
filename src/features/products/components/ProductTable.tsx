@@ -5,10 +5,11 @@ import { formatBRL } from '../../../lib/format'
 interface ProductTableProps {
   products: Product[]
   onEdit: (product: Product) => void
+  onDelete: (id: number) => void
   onToggleAvailable: (id: number) => void
 }
 
-export function ProductTable({ products, onEdit, onToggleAvailable }: ProductTableProps) {
+export function ProductTable({ products, onEdit, onDelete, onToggleAvailable }: ProductTableProps) {
   if (products.length === 0) {
     return (
       <div className="empty-state">
@@ -66,7 +67,7 @@ export function ProductTable({ products, onEdit, onToggleAvailable }: ProductTab
               <button className="btn-icon" title="Editar" onClick={() => onEdit(product)}>
                 <Pencil size={16} />
               </button>
-              <button className="btn-icon" title="Remover">
+              <button className="btn-icon" title="Remover" onClick={() => onDelete(product.id)}>
                 <Trash2 size={16} />
               </button>
             </td>

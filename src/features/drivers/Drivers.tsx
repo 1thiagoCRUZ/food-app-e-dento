@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bike, Phone, MessageCircle, Star, MapPin, Search, Navigation, Store, Flag } from 'lucide-react'
+import { Bike, Phone, MessageCircle, Star, MapPin, Search, Navigation, Store, Flag, Loader2 } from 'lucide-react'
 import { orders, type DeliveryStage, type Driver } from '../../data/mock'
 import { api } from '../../lib/api'
 import { formatPhone } from '../../lib/format'
@@ -30,13 +30,13 @@ export function Drivers() {
       const data = await api.get('/couriers')
       const mappedDrivers: Driver[] = data.map((c: any) => ({
         id: c.id.toString(),
-        name: `Entregador ${c.userId}`,
-        initials: `E${c.userId}`,
-        phone: '11999999999',
-        vehicle: 'Moto Honda CG',
-        plate: 'ABC-1234',
-        rating: 4.8,
-        totalDeliveries: 120,
+        name: `Entregador #${c.userId}`,
+        initials: `MB`,
+        phone: '',
+        vehicle: c.vehiclePlate ? 'Moto' : 'Não informado',
+        plate: c.vehiclePlate || '-',
+        rating: 5,
+        totalDeliveries: c.totalDeliveries || 0,
         distanceKm: c.isOnline ? 1.2 : null,
         status: c.isOnline ? 'available' : 'offline',
         currentOrderId: null,
@@ -68,36 +68,42 @@ export function Drivers() {
         </div>
       </div>
 
-      <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        <div className="stat-card">
-          <div className="stat-card-head">
-            <span className="stat-label">Entregando agora</span>
-            <div className="stat-icon" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
-              <Bike size={18} />
+      {isLoading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+          <Loader2 className="spin text-primary" size={48} />
+        </div>
+      ) : (
+        <>
+          <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            <div className="stat-card">
+              <div className="stat-card-head">
+                <span className="stat-label">Entregando agora</span>
+                <div className="stat-icon" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                  <Bike size={18} />
+                </div>
+              </div>
+              <div className="stat-value">{delivering.length}</div>
+              <div className="stat-delta">Pedidos da sua loja em rota</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-head">
+                <span className="stat-label">Disponíveis na área</span>
+                <div className="stat-icon"><Bike size={18} /></div>
+              </div>
+              <div className="stat-value">{available.length}</div>
+              <div className="stat-delta">Podem aceitar pedidos prontos</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-head">
+                <span className="stat-label">Offline</span>
+                <div className="stat-icon" style={{ background: 'var(--bg-main)', color: 'var(--text-light)' }}>
+                  <Bike size={18} />
+                </div>
+              </div>
+              <div className="stat-value">{offline.length}</div>
+              <div className="stat-delta">Indisponíveis no momento</div>
             </div>
           </div>
-          <div className="stat-value">{delivering.length}</div>
-          <div className="stat-delta">Pedidos da sua loja em rota</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-head">
-            <span className="stat-label">Disponíveis na área</span>
-            <div className="stat-icon"><Bike size={18} /></div>
-          </div>
-          <div className="stat-value">{available.length}</div>
-          <div className="stat-delta">Podem aceitar pedidos prontos</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-head">
-            <span className="stat-label">Offline</span>
-            <div className="stat-icon" style={{ background: 'var(--bg-main)', color: 'var(--text-light)' }}>
-              <Bike size={18} />
-            </div>
-          </div>
-          <div className="stat-value">{offline.length}</div>
-          <div className="stat-delta">Indisponíveis no momento</div>
-        </div>
-      </div>
 
       <div className="flex items-center justify-between mb-16" style={{ marginTop: 8 }}>
         <div>
@@ -259,6 +265,8 @@ export function Drivers() {
           </tbody>
         </table>
       </div>
+      </>
+      )}
 
       {mapDriver && (
         <MapModal

@@ -64,6 +64,17 @@ export function Coupons() {
     }
   }
 
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Tem certeza que deseja remover este cupom?')) return;
+    try {
+      await api.delete(`/coupons/${id}`);
+      fetchCoupons();
+    } catch (error) {
+      console.error('Failed to delete coupon', error);
+      alert('Erro ao excluir cupom');
+    }
+  }
+
   return (
     <>
       <div className="page-header">
@@ -105,7 +116,7 @@ export function Coupons() {
         </div>
       </div>
 
-      <CouponTable coupons={coupons} onToggleStatus={toggleStatus} />
+      <CouponTable coupons={coupons} onToggleStatus={toggleStatus} onDelete={handleDelete} />
 
       {isModalOpen && (
         <CouponFormModal onClose={() => setIsModalOpen(false)} onSave={handleSave} />

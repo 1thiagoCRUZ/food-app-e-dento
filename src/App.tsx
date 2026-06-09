@@ -8,18 +8,28 @@ import { Coupons } from './features/coupons/Coupons'
 import { Drivers } from './features/drivers/Drivers'
 import { Settings } from './features/settings/Settings'
 import { Login } from './features/auth/Login'
+import { Register } from './features/auth/Register'
+import { CreateStore } from './features/auth/CreateStore'
 import { useAuth } from './contexts/AuthContext'
 
 export function App() {
   const [activePath, setActivePath] = useState('pedidos')
-  const { user, isLoading } = useAuth();
+  const [showRegister, setShowRegister] = useState(false)
+  const { user, restaurant, isLoading } = useAuth();
 
   if (isLoading) {
     return null // Or a simple spinner
   }
 
   if (!user) {
-    return <Login />
+    if (showRegister) {
+      return <Register onSwitchToLogin={() => setShowRegister(false)} />
+    }
+    return <Login onSwitchToRegister={() => setShowRegister(true)} />
+  }
+
+  if (user.role === 'RESTAURANT' && !restaurant) {
+    return <CreateStore onStoreCreated={() => {}} />
   }
 
   return (

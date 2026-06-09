@@ -11,11 +11,10 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed = false, activePath = 'pedidos', onNavigate }: SidebarProps) {
   const { user, restaurant } = useAuth();
-  const pendingOrders = orders.filter(o => o.status === 'new' || o.status === 'preparing').length
 
   const mainMenu = [
     { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
-    { icon: ShoppingBag, label: 'Pedidos', path: 'pedidos', badge: pendingOrders },
+    { icon: ShoppingBag, label: 'Pedidos', path: 'pedidos' },
     { icon: Bike, label: 'Entregadores', path: 'entregadores' },
   ]
 

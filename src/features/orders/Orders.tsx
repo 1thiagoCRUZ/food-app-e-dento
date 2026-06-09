@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react'
-import { Bell, ChefHat, Package, Bike, Filter, RefreshCcw } from 'lucide-react'
+import { Bell, ChefHat, Package, Bike, Filter, RefreshCcw, Loader2 } from 'lucide-react'
 import { OrderCard } from './components/OrderCard'
 import { OrderDrawer } from './components/OrderDrawer'
 import { DriverVerifyModal } from './components/DriverVerifyModal'
 import { api } from '../../lib/api'
 import { drivers as initialDrivers, type Order, type OrderStatus } from '../../data/mock'
+import { useAuth } from '../../contexts/AuthContext'
 
 export function Orders() {
   const [orders, setOrders] = useState<Order[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [verifyingId, setVerifyingId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  const RESTAURANT_ID = 1;
+  const { restaurant } = useAuth();
+  const RESTAURANT_ID = restaurant?.id;
 
   const fetchOrders = async () => {
+    if (!RESTAURANT_ID) return;
     try {
-      setIsLoading(true)
+      // setIsLoading(true) -> Do not set loading true on every poll to avoid flicker
       const data = await api.get(`/orders/restaurant/${RESTAURANT_ID}`)
       // Map backend status to frontend status
       const mappedOrders: Order[] = data.map((o: any) => ({
@@ -34,6 +36,14 @@ export function Orders() {
         pickupCode: o.pickupVerificationCode || '1234',
         prepTimeMin: 30,
         status: mapStatus(o.status),
+        driver: o.courierId ? {
+          name: `Entregador #${o.courierId}`,
+          initials: `MB`,
+          vehicle: 'Moto',
+          plate: '-',
+          phone: '',
+          rating: 5,
+        } : undefined,
       }))
       setOrders(mappedOrders)
     } catch (error) {
@@ -44,7 +54,7 @@ export function Orders() {
   }
 
   const mapStatus = (status: string): OrderStatus => {
-    if (status === 'AWAITING_PAYMENT' || status === 'NEW') return 'new';
+    if (status === 'AWAITING_PAYMENT' || status === 'NEW' || status === 'PAID') return 'new';
     if (status === 'PREPARING') return 'preparing';
     if (status === 'READY_FOR_PICKUP') return 'ready';
     if (status === 'OUT_FOR_DELIVERY') return 'shipping';
@@ -55,24 +65,28 @@ export function Orders() {
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+    const intervalId = setInterval(fetchOrders, 10000); // 10s polling
+    return () => clearInterval(intervalId);
+  }, [RESTAURANT_ID])
 
   const moveOrder = async (id: string, newStatus: OrderStatus, patch?: Partial<Order>) => {
     // Optimistic update
+    const previousOrders = [...orders];
     setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, status: newStatus } : o))
     
-    // Reverse map for backend
-    let backendStatus = 'NEW';
-    if (newStatus === 'new') backendStatus = 'NEW';
-    if (newStatus === 'preparing') backendStatus = 'PREPARING';
-    if (newStatus === 'ready') backendStatus = 'READY_FOR_PICKUP';
-    if (newStatus === 'shipping') backendStatus = 'OUT_FOR_DELIVERY';
-
     try {
-      // Assuming a patch endpoint for order status exists or will exist
-      // await api.patch(`/orders/${id}/status`, { status: backendStatus })
+      if (newStatus === 'preparing') {
+        await api.patch(`/orders/${id}/confirm`, {});
+      } else if (newStatus === 'ready') {
+        await api.patch(`/orders/${id}/ready`, {});
+      } else if (newStatus === 'cancelled') {
+        await api.patch(`/orders/${id}/cancel`, {});
+      }
+      // Note: we don't have endpoints for new->new or ready->shipping.
+      // Ready->shipping happens when driver uses PIN.
     } catch (e) {
       console.error('Failed to update status', e)
+      setOrders(previousOrders);
     }
   }
 
@@ -116,9 +130,14 @@ export function Orders() {
         </div>
       </div>
 
-      <div className="kanban-board">
-        {columns.map(col => {
-          const colOrders = orders.filter(o => o.status === col.key)
+      {isLoading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+          <Loader2 className="spin text-primary" size={48} />
+        </div>
+      ) : (
+        <div className="kanban-board">
+          {columns.map(col => {
+            const colOrders = orders.filter(o => o.status === col.key)
           return (
             <div key={col.key} className="kanban-column">
               <div className="kanban-column-header">
@@ -156,6 +175,7 @@ export function Orders() {
           )
         })}
       </div>
+      )}
 
       {selected && (
         <OrderDrawer
