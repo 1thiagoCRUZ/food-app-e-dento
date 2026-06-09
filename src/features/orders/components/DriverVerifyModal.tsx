@@ -7,7 +7,7 @@ interface DriverVerifyModalProps {
   order: Order
   drivers: Driver[]
   onClose: () => void
-  onVerified: (driverId: string) => void
+  onVerified: (driverId: string, code: string) => void
 }
 
 export function DriverVerifyModal({ order, drivers, onClose, onVerified }: DriverVerifyModalProps) {
@@ -29,7 +29,7 @@ export function DriverVerifyModal({ order, drivers, onClose, onVerified }: Drive
     }
     setError(null)
     setSuccess(true)
-    setTimeout(() => onVerified(driverRecord?.id ?? 'D-X'), 700)
+    setTimeout(() => onVerified(driverRecord?.id ?? 'D-X', code), 700)
   }
 
   return (

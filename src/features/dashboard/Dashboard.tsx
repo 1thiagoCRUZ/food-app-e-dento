@@ -26,7 +26,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         
         const mappedOrders: Order[] = ordersData.map((o: any) => ({
           id: o.id.toString(),
-          customer: { name: `Cliente ${o.userId}`, phone: '(11) 99999-9999' },
+          customer: { name: o.customerName || `Cliente ${o.userId}`, phone: o.customerPhone || '(11) 99999-9999' },
           items: o.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: parseFloat(i.price) })),
           total: parseFloat(o.total),
           status: mapStatus(o.status),
@@ -60,10 +60,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   }, [])
 
   const mapStatus = (status: string) => {
-    if (status === 'AWAITING_PAYMENT' || status === 'NEW') return 'new';
+    if (status === 'AWAITING_PAYMENT' || status === 'NEW' || status === 'PAID') return 'new';
     if (status === 'PREPARING') return 'preparing';
     if (status === 'READY_FOR_PICKUP') return 'ready';
-    if (status === 'OUT_FOR_DELIVERY') return 'shipping';
+    if (status === 'OUT_FOR_DELIVERY' || status === 'IN_TRANSIT') return 'shipping';
     if (status === 'DELIVERED') return 'delivered';
     if (status === 'CANCELLED') return 'cancelled';
     return 'new';
@@ -299,6 +299,8 @@ function StatusPill({ status }: { status: string }) {
     preparing: { label: 'Preparo', cls: 'pill-info' },
     ready: { label: 'Pronto', cls: 'pill-warning' },
     shipping: { label: 'Em entrega', cls: 'pill-success' },
+    delivered: { label: 'Entregue', cls: 'pill-neutral' },
+    cancelled: { label: 'Cancelado', cls: 'pill-danger' },
   }
   const s = map[status] || { label: status, cls: 'pill-neutral' }
   return (

@@ -12,14 +12,17 @@ export function Orders() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [verifyingId, setVerifyingId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showHistory, setShowHistory] = useState(false)
   const { restaurant } = useAuth();
   const RESTAURANT_ID = restaurant?.id;
 
   const fetchOrders = async () => {
     if (!RESTAURANT_ID) return;
     try {
-      // setIsLoading(true) -> Do not set loading true on every poll to avoid flicker
-      const data = await api.get(`/orders/restaurant/${RESTAURANT_ID}`)
+      const [data, couriersData] = await Promise.all([
+        api.get(`/orders/restaurant/${RESTAURANT_ID}`),
+        api.get(`/couriers`).catch(() => [])
+      ])
       // Map backend status to frontend status
       const mappedOrders: Order[] = data.map((o: any) => ({
         id: o.id.toString(),
@@ -40,14 +43,17 @@ export function Orders() {
         pickupCode: o.pickupVerificationCode || '1234',
         prepTimeMin: 30,
         status: mapStatus(o.status),
-        driver: o.courierId ? {
-          name: `Entregador #${o.courierId}`,
-          initials: `MB`,
-          vehicle: 'Moto',
-          plate: '-',
-          phone: '',
-          rating: 5,
-        } : undefined,
+        driver: o.courierId ? (() => {
+          const c = couriersData.find((c: any) => c.userId === o.courierId) || {};
+          return {
+            name: c.name || `Entregador #${o.courierId}`,
+            initials: (c.name || 'Motoboy').split(' ').map((p: string) => p[0]).slice(0,2).join(''),
+            vehicle: c.vehiclePlate ? 'Moto' : 'Veículo',
+            plate: c.vehiclePlate || '-',
+            phone: c.phone || '',
+            rating: 5,
+          };
+        })() : undefined,
       }))
       setOrders(mappedOrders)
     } catch (error) {
@@ -73,7 +79,7 @@ export function Orders() {
     return () => clearInterval(intervalId);
   }, [RESTAURANT_ID])
 
-  const moveOrder = async (id: string, newStatus: OrderStatus, patch?: Partial<Order>) => {
+  const moveOrder = async (id: string, newStatus: OrderStatus, patch?: Partial<Order>, code?: string) => {
     // Optimistic update
     const previousOrders = [...orders];
     setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, status: newStatus } : o))
@@ -85,6 +91,8 @@ export function Orders() {
         await api.patch(`/orders/${id}/ready`, {});
       } else if (newStatus === 'cancelled') {
         await api.patch(`/orders/${id}/cancel`, {});
+      } else if (newStatus === 'shipping') {
+        await api.patch(`/orders/${id}/pickup`, { code: code || '1234' });
       }
       // Note: we don't have endpoints for new->new or ready->shipping.
       // Ready->shipping happens when driver uses PIN.
@@ -94,9 +102,9 @@ export function Orders() {
     }
   }
 
-  const onVerified = (orderId: string, driverId: string) => {
-    const driver = initialDrivers.find(d => d.id === driverId)
-    if (!driver) return
+  const onVerified = (orderId: string, driverId: string, code: string) => {
+    const driver = initialDrivers.find(d => d.id === driverId) || { name: 'Entregador', initials: 'MB', vehicle: 'Moto', plate: '-', phone: '', rating: 5, id: 'D-X', status: 'available', totalDeliveries: 0, distanceKm: 1 }
+    
     moveOrder(orderId, 'shipping', {
       driver: {
         name: driver.name,
@@ -106,7 +114,7 @@ export function Orders() {
         phone: driver.phone,
         rating: driver.rating,
       },
-    })
+    }, code)
     setVerifyingId(null)
     setSelectedId(null)
   }
@@ -128,6 +136,9 @@ export function Orders() {
           <p className="page-subtitle">Acompanhe o fluxo da cozinha até a saída para entrega em tempo real.</p>
         </div>
         <div className="flex gap-8 items-center">
+          <button className="btn btn-outline" onClick={() => setShowHistory(true)}>
+            Histórico
+          </button>
           <button className="btn btn-outline" onClick={fetchOrders} disabled={isLoading}>
             <RefreshCcw size={16} className={isLoading ? 'spin' : ''} /> Atualizar
           </button>
@@ -199,8 +210,51 @@ export function Orders() {
           order={orders.find(o => o.id === verifyingId)!}
           drivers={initialDrivers}
           onClose={() => setVerifyingId(null)}
-          onVerified={(driverId) => onVerified(verifyingId, driverId)}
+          onVerified={(driverId, code) => onVerified(verifyingId, driverId, code)}
         />
+      )}
+
+      {showHistory && (
+        <div className="modal-backdrop" onClick={() => setShowHistory(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 800, width: '100%', height: '80vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <div className="modal-title">Histórico de Pedidos</div>
+              <button className="btn-icon" onClick={() => setShowHistory(false)}><X size={18} /></button>
+            </div>
+            <div className="modal-body" style={{ padding: 0 }}>
+              {orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-state-title">Nenhum pedido no histórico</div>
+                </div>
+              ) : (
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Pedido</th>
+                      <th>Cliente</th>
+                      <th>Status</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').map(o => (
+                      <tr key={o.id}>
+                        <td>#{o.id} <br/><span className="text-xs text-muted">{o.placedAt}</span></td>
+                        <td>{o.customer.name}</td>
+                        <td>
+                          <span className={`pill ${o.status === 'delivered' ? 'pill-success' : 'pill-danger'}`}>
+                            {o.status === 'delivered' ? 'Entregue' : 'Cancelado'}
+                          </span>
+                        </td>
+                        <td className="fw-700">R$ {o.total.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
