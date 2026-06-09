@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, ChefHat, Package, Bike, Filter, RefreshCcw, Loader2 } from 'lucide-react'
+import { Bell, ChefHat, Package, Bike, Filter, RefreshCcw, Loader2, X } from 'lucide-react'
 import { OrderCard } from './components/OrderCard'
 import { OrderDrawer } from './components/OrderDrawer'
 import { DriverVerifyModal } from './components/DriverVerifyModal'
@@ -12,7 +12,6 @@ export function Orders() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [verifyingId, setVerifyingId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [showHistory, setShowHistory] = useState(false)
   const { restaurant } = useAuth();
   const RESTAURANT_ID = restaurant?.id;
 
@@ -136,9 +135,6 @@ export function Orders() {
           <p className="page-subtitle">Acompanhe o fluxo da cozinha até a saída para entrega em tempo real.</p>
         </div>
         <div className="flex gap-8 items-center">
-          <button className="btn btn-outline" onClick={() => setShowHistory(true)}>
-            Histórico
-          </button>
           <button className="btn btn-outline" onClick={fetchOrders} disabled={isLoading}>
             <RefreshCcw size={16} className={isLoading ? 'spin' : ''} /> Atualizar
           </button>
@@ -214,48 +210,6 @@ export function Orders() {
         />
       )}
 
-      {showHistory && (
-        <div className="modal-backdrop" onClick={() => setShowHistory(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 800, width: '100%', height: '80vh', overflowY: 'auto' }}>
-            <div className="modal-header">
-              <div className="modal-title">Histórico de Pedidos</div>
-              <button className="btn-icon" onClick={() => setShowHistory(false)}><X size={18} /></button>
-            </div>
-            <div className="modal-body" style={{ padding: 0 }}>
-              {orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-state-title">Nenhum pedido no histórico</div>
-                </div>
-              ) : (
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Pedido</th>
-                      <th>Cliente</th>
-                      <th>Status</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').map(o => (
-                      <tr key={o.id}>
-                        <td>#{o.id} <br/><span className="text-xs text-muted">{o.placedAt}</span></td>
-                        <td>{o.customer.name}</td>
-                        <td>
-                          <span className={`pill ${o.status === 'delivered' ? 'pill-success' : 'pill-danger'}`}>
-                            {o.status === 'delivered' ? 'Entregue' : 'Cancelado'}
-                          </span>
-                        </td>
-                        <td className="fw-700">R$ {o.total.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }

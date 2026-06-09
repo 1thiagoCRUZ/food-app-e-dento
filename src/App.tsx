@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import MainLayout from './layouts/MainLayout'
 import { Dashboard } from './features/dashboard/Dashboard'
 import { Orders } from './features/orders/Orders'
+import { History } from './features/history/History'
 import { Products } from './features/products/Products'
 import { Coupons } from './features/coupons/Coupons'
 import { Drivers } from './features/drivers/Drivers'
@@ -38,6 +39,7 @@ export function App() {
       <MainLayout activePath={activePath} onNavigate={setActivePath}>
         {activePath === 'dashboard' && <Dashboard onNavigate={setActivePath} />}
         {activePath === 'pedidos' && <Orders />}
+        {activePath === 'historico' && <History />}
         {activePath === 'entregadores' && <Drivers />}
         {activePath === 'produtos' && <Products />}
         {activePath === 'cupons' && <Coupons />}

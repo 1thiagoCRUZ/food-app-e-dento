@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingBag, Bike, Package, Ticket, Settings, ChevronRight, LogOut } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Bike, Package, Ticket, Settings, ChevronRight, LogOut, Clock } from 'lucide-react'
 import { orders } from '../../data/mock'
 
 import { useAuth } from '../../contexts/AuthContext'
@@ -15,6 +15,7 @@ export function Sidebar({ collapsed = false, activePath = 'pedidos', onNavigate 
   const mainMenu = [
     { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
     { icon: ShoppingBag, label: 'Pedidos', path: 'pedidos' },
+    { icon: Clock, label: 'Histórico', path: 'historico' },
     { icon: Bike, label: 'Entregadores', path: 'entregadores' },
   ]
 
