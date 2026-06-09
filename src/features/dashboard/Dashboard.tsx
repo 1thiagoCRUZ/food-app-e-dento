@@ -89,6 +89,37 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const maxHourly = Math.max(...hourlyOrders.map(h => h.count), 1)
   const maxTopProduct = Math.max(...topProducts.map(p => p.count), 1)
 
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'pulse 1.5s infinite ease-in-out' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ width: '200px', height: '28px', background: 'var(--border-light)', borderRadius: '6px', marginBottom: '8px' }} />
+            <div style={{ width: '300px', height: '16px', background: 'var(--bg-main)', borderRadius: '4px' }} />
+          </div>
+          <div style={{ width: '240px', height: '36px', background: 'var(--border-light)', borderRadius: '6px' }} />
+        </div>
+        <div className="stat-grid">
+          {[1, 2, 3].map(i => <div key={i} className="stat-card" style={{ height: '110px', background: 'var(--bg-white)', borderColor: 'var(--border-light)' }}>
+            <div style={{ width: '40%', height: '14px', background: 'var(--bg-main)', borderRadius: '4px', marginBottom: '16px' }} />
+            <div style={{ width: '60%', height: '28px', background: 'var(--border-light)', borderRadius: '6px', marginBottom: '12px' }} />
+            <div style={{ width: '50%', height: '12px', background: 'var(--bg-main)', borderRadius: '4px' }} />
+          </div>)}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
+          <div className="card card-pad-lg" style={{ height: '280px', background: 'var(--bg-white)' }}>
+             <div style={{ width: '30%', height: '20px', background: 'var(--border-light)', borderRadius: '4px', marginBottom: '8px' }} />
+             <div style={{ width: '40%', height: '14px', background: 'var(--bg-main)', borderRadius: '4px' }} />
+          </div>
+          <div className="card card-pad-lg" style={{ height: '280px', background: 'var(--bg-white)' }}>
+             <div style={{ width: '50%', height: '20px', background: 'var(--border-light)', borderRadius: '4px', marginBottom: '24px' }} />
+             {[1, 2, 3, 4].map(i => <div key={i} style={{ width: '100%', height: '32px', background: 'var(--bg-main)', borderRadius: '6px', marginBottom: '12px' }} />)}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="page-header">
@@ -132,15 +163,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </div>
           <div className="stat-value">{formatBRL(avgTicket)}</div>
           <div className="stat-delta up"><ArrowUp size={12} /> +3% vs ontem</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card-head">
-            <span className="stat-label">Tempo médio de preparo</span>
-            <div className="stat-icon"><Clock size={18} /></div>
-          </div>
-          <div className="stat-value">{avgPrepTime} min</div>
-          <div className="stat-delta down"><ArrowDown size={12} /> -4 min vs ontem</div>
         </div>
       </div>
 

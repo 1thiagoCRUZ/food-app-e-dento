@@ -25,7 +25,7 @@ export function Products() {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      const url = restaurant ? `/catalog?restaurantId=${restaurant.id}` : '/catalog';
+      const url = restaurant ? `/products?restaurantId=${restaurant.id}` : '/products';
       const data = await api.get(url);
       setProducts(data);
     } catch (error) {
@@ -58,7 +58,7 @@ export function Products() {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, available: !p.available } : p));
     
     try {
-      await api.put(`/catalog/${id}`, { available: !product.available });
+      await api.put(`/products/${id}`, { available: !product.available });
     } catch (error) {
       // Revert on error
       setProducts(prev => prev.map(p => p.id === id ? { ...p, available: product.available } : p));
@@ -74,7 +74,7 @@ export function Products() {
   const handleDelete = async (id: number) => {
     if (!window.confirm('Tem certeza que deseja remover este produto?')) return;
     try {
-      await api.delete(`/catalog/${id}`);
+      await api.delete(`/products/${id}`);
       fetchProducts();
     } catch (error) {
       console.error('Failed to delete product', error);
@@ -90,10 +90,10 @@ export function Products() {
         data.append('restaurantId', restaurant.id.toString());
       }
       if (editingProduct) {
-        await api.put(`/catalog/${editingProduct.id}`, data);
+        await api.put(`/products/${editingProduct.id}`, data);
         toast.success('Produto atualizado com sucesso!');
       } else {
-        await api.post('/catalog', data);
+        await api.post('/products', data);
         toast.success('Produto criado com sucesso!');
       }
       handleCloseModal()

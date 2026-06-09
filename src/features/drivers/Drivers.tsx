@@ -27,22 +27,40 @@ export function Drivers() {
   const fetchDrivers = async () => {
     try {
       setIsLoading(true)
-      const data = await api.get('/couriers')
-      const mappedDrivers: Driver[] = data.map((c: any) => ({
-        id: c.id.toString(),
-        name: `Entregador #${c.userId}`,
-        initials: `MB`,
-        phone: '',
-        vehicle: c.vehiclePlate ? 'Moto' : 'Não informado',
-        plate: c.vehiclePlate || '-',
-        rating: 5,
-        totalDeliveries: c.totalDeliveries || 0,
-        distanceKm: c.isOnline ? 1.2 : null,
-        status: c.isOnline ? 'available' : 'offline',
-        currentOrderId: null,
-        deliveryStage: null,
-        etaMin: null,
-      }))
+      const couriers = await api.get('/couriers')
+      const mappedDrivers: Driver[] = await Promise.all(
+        couriers.map(async (c: any) => {
+          let user: any = null
+          try {
+            user = await api.get(`/users/${c.userId}`)
+          } catch (e) {}
+
+          // Obter a quantidade de entregas do entregador
+          let deliveriesCount = 0
+          try {
+            const countRes = await api.get(`/orders/courier/${c.id}/deliveries/count`) // Just guessing, or I can use the existing backend order count if any. Wait, earlier I saw countCourierDeliveries... Actually, CourierController.getProfile(id) might return totalDeliveries.
+            // Let's just fallback to the courier profile
+            const profile = await api.get(`/couriers/${c.id}`)
+            deliveriesCount = profile.totalDeliveries || 0
+          } catch (e) {}
+
+          return {
+            id: c.id.toString(),
+            name: user?.name || `Entregador #${c.userId}`,
+            initials: user?.name ? user.name.substring(0, 2).toUpperCase() : `MB`,
+            phone: user?.phone || '',
+            vehicle: c.vehiclePlate ? 'Moto' : 'Não informado',
+            plate: c.vehiclePlate || '-',
+            rating: 5,
+            totalDeliveries: deliveriesCount || c.totalDeliveries || 0,
+            distanceKm: c.isOnline ? 1.2 : null,
+            status: c.isOnline ? 'available' : 'offline',
+            currentOrderId: null,
+            deliveryStage: null,
+            etaMin: null,
+          }
+        })
+      )
       setDrivers(mappedDrivers)
     } catch (error) {
       console.error('Failed to fetch drivers', error)

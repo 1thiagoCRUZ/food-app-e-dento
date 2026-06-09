@@ -25,13 +25,17 @@ export function Orders() {
         id: o.id.toString(),
         time: new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         placedAt: `Hoje, ${new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-        customer: { name: `Cliente ${o.userId}`, phone: '(11) 99999-9999', address: 'Endereço não informado' },
+        customer: { 
+          name: o.customerName || `Cliente ${o.userId}`, 
+          phone: o.customerPhone || '(11) 99999-9999', 
+          address: o.deliveryStreet ? `${o.deliveryStreet}, ${o.deliveryCity}` : 'Endereço não informado' 
+        },
         items: o.items.map((i: any) => ({ name: i.name, q: i.quantity, price: parseFloat(i.price) })),
         subtotal: parseFloat(o.total),
         deliveryFee: 0,
         total: parseFloat(o.total),
-        payment: 'Cartão / Pix',
-        paymentType: 'pix',
+        payment: o.paymentMethod === 'CREDIT_CARD' ? 'Cartão' : (o.paymentMethod || 'Pix'),
+        paymentType: o.paymentMethod === 'PIX' ? 'pix' : 'card',
         paid: true,
         pickupCode: o.pickupVerificationCode || '1234',
         prepTimeMin: 30,
@@ -57,7 +61,7 @@ export function Orders() {
     if (status === 'AWAITING_PAYMENT' || status === 'NEW' || status === 'PAID') return 'new';
     if (status === 'PREPARING') return 'preparing';
     if (status === 'READY_FOR_PICKUP') return 'ready';
-    if (status === 'OUT_FOR_DELIVERY') return 'shipping';
+    if (status === 'OUT_FOR_DELIVERY' || status === 'IN_TRANSIT') return 'shipping';
     if (status === 'DELIVERED') return 'delivered';
     if (status === 'CANCELLED') return 'cancelled';
     return 'new';

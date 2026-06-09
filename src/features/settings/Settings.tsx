@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Store, Clock, CreditCard, Bell, Truck } from 'lucide-react'
+import { Store, Clock, CreditCard, Bell, Truck, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
 const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
@@ -39,6 +39,22 @@ export function Settings() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <SectionCard icon={ImageIcon} title="Logo do Restaurante" desc="Sua marca no aplicativo">
+           <div className="flex items-center gap-16">
+              <div style={{ width: 80, height: 80, borderRadius: 8, background: 'var(--bg-main)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                 {/* @ts-ignore - Assuming photoUrl or photo might exist later */}
+                 {restaurant?.photoUrl || restaurant?.photo ? <img src={restaurant.photoUrl || restaurant.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={24} color="var(--text-light)" />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="btn btn-outline" style={{ cursor: 'pointer', marginBottom: 8, display: 'inline-flex' }}>
+                  Escolher nova foto
+                  <input type="file" style={{ display: 'none' }} accept="image/*" />
+                </label>
+                <div className="text-xs text-muted">Apenas PNG ou JPG. Recomendado: quadrado 400x400px.</div>
+              </div>
+           </div>
+        </SectionCard>
+
         <SectionCard icon={Store} title="Dados da loja" desc="Informações exibidas para clientes">
           <div className="field">
             <label>Nome da loja</label>
